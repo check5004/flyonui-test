@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyonUI 対話型セットアップガイド for Windows</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Developer Focus -->
+    <!-- Application Structure Plan: The application is designed as an interactive, single-page guided setup tool. It uses a sticky sidebar for navigation between key stages (Prerequisites, Setup, Config, etc.), and a main content area that displays detailed steps. Sub-steps within major sections are organized into accordions to prevent information overload. This task-oriented, non-linear structure was chosen over a simple document layout to improve usability for developers who may need to jump to specific sections or easily copy code snippets, making the setup process faster and less error-prone. -->
+    <!-- Visualization & Content Choices: Since the source material is a technical guide, no data visualization charts are needed. The focus is on clear presentation of instructional text and code. Report Info: Setup commands/code -> Goal: Guide user -> Presentation: Styled code blocks -> Interaction: Copy-to-clipboard button -> Justification: Improves accuracy and speed for the developer. Report Info: Sequential steps -> Goal: Organize -> Presentation: Accordion/Tabbed interface -> Interaction: Click to expand/show -> Justification: Reduces cognitive load and improves scannability. All interactions are implemented with vanilla JavaScript. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        .code-block {
+            background-color: #282c34;
+            color: #abb2bf;
+            position: relative;
+        }
+        .code-block button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4f5666;
+            color: #e6e6e6;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover button { opacity: 1; }
+        .sidebar-link.active {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            font-weight: 600;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .accordion-item.open .accordion-content {
+            max-height: 1000px;
+        }
+        .accordion-item.open .accordion-arrow {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="flex flex-col md:flex-row">
+        <aside class="w-full md:w-64 bg-white border-b md:border-r border-gray-200 md:min-h-screen">
+            <div class="p-4 border-b border-gray-200">
+                <h1 class="text-lg font-bold text-indigo-800">FlyonUI ガイド</h1>
+                <p class="text-xs text-gray-500">for Windows</p>
+            </div>
+            <nav id="sidebar-nav" class="p-2 md:sticky md:top-0">
+                <a href="#introduction" class="sidebar-link block px-4 py-2 text-sm rounded-md hover:bg-gray-100">はじめに</a>
+                <a href="#prerequisites" class="sidebar-link block px-4 py-2 text-sm rounded-md hover:bg-gray-100">前提条件</a>
+                <a href="#setup" class="sidebar-link block px-4 py-2 text-sm rounded-md hover:bg-gray-100">プロジェクトセットアップ</a>
+                <a href="#config" class="sidebar-link block px-4 py-2 text-sm rounded-md hover:bg-gray-100">各種設定</a>
+                <a href="#sample" class="sidebar-link block px-4 py-2 text-sm rounded-md hover:bg-gray-100">サンプルページ作成</a>
+                <a href="#final" class="sidebar-link block px-4 py-2 text-sm rounded-md hover:bg-gray-100">最終確認</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-10">
+            <div class="max-w-4xl mx-auto">
+                <section id="introduction" class="mb-12 scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2 mb-4">はじめに</h2>
+                    <p class="mb-4">このガイドは、Windows環境でNuxt.jsとUIフレームワーク「FlyonUI」を使用して、新しいフロントエンドプロジェクトを立ち上げるための対話型手順書です。FlyonUIはTailwind CSSと完全に統合されており、効率的な開発を支援します。</p>
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 text-indigo-700 p-4 rounded-r-lg" role="alert">
+                        <p class="font-bold mb-1">技術スタック</p>
+                        <ul class="list-disc list-inside text-sm">
+                            <li>フレームワーク: Nuxt 3</li>
+                            <li>UIフレームワーク: FlyonUI, Tailwind CSS</li>
+                            <li>状態管理: Pinia</li>
+                            <li>国際化: @nuxtjs/i18n</li>
+                            <li>リンター: ESLint</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="prerequisites" class="mb-12 scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2 mb-4">前提条件</h2>
+                    <p class="mb-4">セットアップを開始する前に、お使いの環境が以下の要件を満たしていることを確認してください。</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start p-3 bg-white rounded-lg shadow-sm">
+                            <span class="text-green-500 mr-3 mt-1">✓</span>
+                            <div><strong>OS:</strong> Windows 10 / 11</div>
+                        </li>
+                        <li class="flex items-start p-3 bg-white rounded-lg shadow-sm">
+                            <span class="text-green-500 mr-3 mt-1">✓</span>
+                            <div><strong>ターミナル:</strong> PowerShell または コマンドプロンプト</div>
+                        </li>
+                        <li class="flex items-start p-3 bg-white rounded-lg shadow-sm">
+                            <span class="text-green-500 mr-3 mt-1">✓</span>
+                            <div><strong>Node.js:</strong> LTS版 (例: v18.x, v20.x) がインストール済みであること。<br><a href="https://nodejs.org/" target="_blank" class="text-indigo-600 hover:underline text-sm">公式サイトからダウンロード →</a></div>
+                        </li>
+                    </ul>
+                </section>
+
+                <section id="setup" class="mb-12 scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2 mb-4">プロジェクトセットアップ</h2>
+                    <p class="mb-6">ここからはターミナルを使い、Nuxtプロジェクトの雛形作成と依存関係のインストールを行います。各ステップのアコーディオンを開いて手順を確認してください。</p>
+                    <div class="space-y-2" id="setup-accordion">
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 1: プロジェクトディレクトリの作成</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">作業用のディレクトリを作成し、移動します。以下のコマンドを順番に実行してください。</p>
+                                <div class="code-block rounded-md p-4 text-sm">
+                                    <pre><code class="language-powershell">mkdir C:\dev
+cd C:\dev
+mkdir my-flyonui-project
+cd my-flyonui-project</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 2: Nuxt 3プロジェクトの雛形を作成</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">対話形式でNuxtプロジェクトを作成します。以下のコマンドを実行し、ガイドに従って選択してください。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-shell">npm create nuxt@latest</code></pre></div>
+                                <p class="mt-3 text-sm text-gray-600">UI frameworkは `None`、Linting toolsは `ESLint` を選択するのがおすすめです。</p>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                             <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 3: 必要な依存関係をインストール</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">FlyonUIや関連モジュールをインストールします。</p>
+                                <p class="font-medium text-sm mt-4 mb-2">ランタイム依存関係:</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-shell">npm i pinia @pinia/nuxt @nuxtjs/i18n @headlessui/vue @heroicons/vue flyonui</code></pre></div>
+                                <p class="font-medium text-sm mt-4 mb-2">開発時依存関係:</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-shell">npm i -D @nuxt/eslint-config eslint @nuxtjs/tailwindcss @iconify/tailwind4</code></pre></div>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                             <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 4: 初回起動確認</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">開発サーバーを起動し、初期ページが表示されるか確認します。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-shell">npm run dev</code></pre></div>
+                                <p class="mt-3 text-sm">ブラウザで <a href="http://localhost:3000" target="_blank" class="text-indigo-600 hover:underline">http://localhost:3000</a> を開き、Nuxtのウェルカムページが表示されたら成功です。確認後、ターミナルで `Ctrl + C` を押してサーバーを停止してください。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="config" class="mb-12 scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2 mb-4">各種設定</h2>
+                    <p class="mb-6">インストールしたモジュールをNuxtプロジェクトで有効にするための設定ファイルを作成・編集します。</p>
+                     <div class="space-y-2" id="config-accordion">
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 1: `nuxt.config.ts` の設定</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">プロジェクトのルートにある `nuxt.config.ts` を以下の内容で更新します。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-typescript">export default defineNuxtConfig({
+  devtools: { enabled: true },
+  modules: [
+    '@pinia/nuxt',
+    '@nuxtjs/i18n',
+    '@nuxtjs/tailwindcss'
+  ],
+  i18n: {
+    locales: ['ja', 'en'],
+    defaultLocale: 'ja',
+  },
+  css: [
+    '~/assets/css/tailwind.css'
+  ],
+})</code></pre></div>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                             <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 2: Tailwind CSS と FlyonUI の設定</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="font-medium text-sm mt-4 mb-2">1. `tailwind.config.js` を作成</p>
+                                <p class="mb-2 text-sm">プロジェクトのルートに以下の内容で `tailwind.config.js` を作成します。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-javascript">/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./components/**/*.{js,vue,ts}",
+    "./layouts/**/*.vue",
+    "./pages/**/*.vue",
+    "./plugins/**/*.{js,ts}",
+    "./app.vue",
+    "./error.vue",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}</code></pre></div>
+                                <p class="font-medium text-sm mt-4 mb-2">2. `assets/css/tailwind.css` を作成</p>
+                                <p class="mb-2 text-sm">`assets/css/` ディレクトリに `tailwind.css` を作成し、FlyonUIをプラグインとして読み込みます。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-css">@import "tailwindcss";
+
+@plugin "flyonui";
+@plugin "@iconify/tailwind4";
+
+@import "flyonui/variants.css"; 
+@source "./node_modules/flyonui/dist/index.js";</code></pre></div>
+                            </div>
+                        </div>
+                     </div>
+                </section>
+
+                <section id="sample" class="mb-12 scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2 mb-4">サンプルページ作成</h2>
+                    <p class="mb-6">アプリケーションの基本的な骨格となるファイルを作成し、FlyonUIのコンポーネントを試します。</p>
+                     <div class="space-y-2" id="sample-accordion">
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 1: ディレクトリ構造の確認</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p>以下のディレクトリがプロジェクトルートに存在することを確認してください（なければ作成します）。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code>/components
+/components/ui
+/layouts
+/pages
+/stores</code></pre></div>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                             <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 2: デフォルトレイアウトの作成 (`layouts/default.vue`)</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">全ページ共通のレイアウトを作成します。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-html">&lt;template&gt;
+  &lt;div class="bg-gray-50 min-h-screen"&gt;
+    &lt;header class="bg-white shadow-sm"&gt;
+      &lt;nav class="container mx-auto px-4 py-3"&gt;
+        &lt;h1 class="text-xl font-bold"&gt;FlyonUI Project&lt;/h1&gt;
+      &lt;/nav&gt;
+    &lt;/header&gt;
+
+    &lt;main class="container mx-auto px-4 py-8"&gt;
+      &lt;slot /&gt;
+    &lt;/main&gt;
+
+    &lt;footer class="text-center py-4 text-gray-500"&gt;
+      &lt;p&gt;&amp;copy; 2025 My FlyonUI Project&lt;/p&gt;
+    &lt;/footer&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre></div>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                             <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 3: トップページの作成 (`pages/index.vue`)</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">FlyonUIのクラスを使ったサンプルページを作成します。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-html">&lt;template&gt;
+  &lt;div&gt;
+    &lt;h2 class="text-2xl font-semibold mb-4"&gt;Welcome to FlyonUI!&lt;/h2&gt;
+    &lt;p class="mb-6"&gt;This is a sample page using FlyonUI components with Nuxt 3.&lt;/p&gt;
+
+    &lt;div class="flex items-center gap-4"&gt;
+      &lt;button class="btn btn-primary"&gt;Primary Button&lt;/button&gt;
+      &lt;button class="btn btn-secondary"&gt;Secondary Button&lt;/button&gt;
+      &lt;span class="badge badge-info"&gt;Info Badge&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre></div>
+                            </div>
+                        </div>
+                        <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200">
+                             <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                <span>Step 4: エントリーポイントの編集 (`app.vue`)</span>
+                                <svg class="accordion-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <p class="mb-2">`app.vue` を編集し、レイアウトとページが描画されるようにします。</p>
+                                <div class="code-block rounded-md p-4 text-sm"><pre><code class="language-html">&lt;template&gt;
+  &lt;div&gt;
+    &lt;NuxtLayout&gt;
+      &lt;NuxtPage /&gt;
+    &lt;/NuxtLayout&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre></div>
+                            </div>
+                        </div>
+                     </div>
+                </section>
+                
+                <section id="final" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2 mb-4">最終確認</h2>
+                    <p class="mb-4">すべての設定が完了しました。再度、開発サーバーを起動して表示を確認しましょう。</p>
+                    <div class="code-block rounded-md p-4 text-sm mb-4"><pre><code class="language-shell">npm run dev</code></pre></div>
+                    <p class="mb-4">ブラウザで <a href="http://localhost:3000" target="_blank" class="text-indigo-600 hover:underline">http://localhost:3000</a> を開きます。作成したレイアウトの中に、FlyonUIのスタイルが適用されたボタンとバッジが表示されていれば、セットアップは成功です！</p>
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-r-lg" role="alert">
+                      <p class="font-bold">お疲れ様でした！</p>
+                      <p>これでFlyonUIを使った開発を始める準備が整いました。</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                const button = document.createElement('button');
+                button.innerText = 'Copy';
+                block.appendChild(button);
+
+                button.addEventListener('click', () => {
+                    const codeToCopy = block.querySelector('code').innerText;
+                    const textArea = document.createElement('textarea');
+                    textArea.value = codeToCopy;
+                    // Prevent scrolling to bottom of page in MS Edge.
+                    textArea.style.position = 'fixed';
+                    textArea.style.top = 0;
+                    textArea.style.left = 0;
+
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+
+                    try {
+                        document.execCommand('copy');
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Fallback: Oops, unable to copy', err);
+                        button.innerText = 'Failed!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    }
+
+                    document.body.removeChild(textArea);
+                });
+            });
+
+            const accordions = document.querySelectorAll('.accordion-item');
+            accordions.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                header.addEventListener('click', () => {
+                    item.classList.toggle('open');
+                });
+            });
+
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            const sections = document.querySelectorAll('section');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        sidebarLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
+
