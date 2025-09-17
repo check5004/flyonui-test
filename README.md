@@ -1,4 +1,4 @@
-# FlyonUI 対話型セットアップガイド
+# FlyonUI × Nuxt テンプレート（Docker 初心者向けガイド）
 
 ![FlyonUI](https://img.shields.io/badge/FlyonUI-Tailwind%20CSS%20Framework-blue)
 ![Nuxt 3](https://img.shields.io/badge/Nuxt-3.x-00C58E)
@@ -12,7 +12,7 @@ Windows環境でNuxt.js 3とUIフレームワーク「FlyonUI」を使用して�
 - [技術スタック](#技術スタック)
 - [プロジェクト構成](#プロジェクト構成)
 - [クイックスタート](#クイックスタート)
-- [対話型セットアップガイド](#対話型セットアップガイド)
+- [開発の進め方](#開発の進め方)
 - [段階的セットアップ](#段階的セットアップ)
 - [アーキテクチャ](#アーキテクチャ)
 - [トラブルシューティング](#トラブルシューティング)
@@ -21,14 +21,14 @@ Windows環境でNuxt.js 3とUIフレームワーク「FlyonUI」を使用して�
 
 ## 🎯 概要
 
-このプロジェクトは、開発者がWindows環境で効率的にモダンなフロントエンドアプリケーションを構築できるように設計された、包括的なセットアップガイドです。
+このプロジェクトは、Docker だけあれば環境汚染ゼロで Nuxt + FlyonUI の開発を始められるテンプレートです。Node のローカルインストールは不要です。
 
-### 主な特徴
+### 主な特徴（初心者にやさしい）
 
-- **対話型ガイド**: ブラウザ上で実行できるインタラクティブなセットアップ手順
-- **段階的アプローチ**: 確実に進められる詳細なステップバイステップガイド
-- **AI支援**: AIアシスタントによる自動化されたセットアップオプション
-- **Windows最適化**: Windows環境での開発に特化した設定
+- **Docker 前提**: PC に Node を入れずに動きます（Docker Desktop だけでOK）
+- **自動初期化**: 初回起動で Nuxt 雛形・依存導入・サンプルを自動配置
+- **高速再開**: 2回目以降は即 `docker compose up` で継続開発
+- **バージョン切替**: `.env` で Nuxt 3/4 や各ライブラリの範囲を変更可能
 
 ## 🛠 技術スタック
 
@@ -64,7 +64,6 @@ Windows環境でNuxt.js 3とUIフレームワーク「FlyonUI」を使用して�
 │               ├── 03_sample_page.md
 │               ├── 04_arch_examples.md
 │               └── 05_review_checklist.md
-├── index.html                      # 対話型セットアップガイド
 ├── LICENSE                         # MITライセンス
 └── README.md                       # このファイル
 ```
@@ -114,25 +113,72 @@ NUXT_MAJOR=4
   - `docker/scripts/entrypoint.sh`, `docker/scripts/bootstrap.sh`
 - `docker-compose.yml` はルートに配置し、`docker/Dockerfile` を参照します。
 
-## 🖥 対話型セットアップガイド
+## 🧑‍💻 開発の進め方
 
-`index.html`は、フルスタックの対話型セットアップ体験を提供します：
+### サーバー起動（ホットリロード）
+```bash
+docker compose up
+```
+ブラウザで `http://localhost:3000` を開きます。コード編集はローカルで行い、ホットリロードが反映されます。
 
-### 機能
-- **ステップバイステップナビゲーション**: 左サイドバーで進捗を追跡
-- **アコーディオンUI**: 各ステップの詳細を展開/折りたたみ
-- **ワンクリックコピー**: すべてのコマンドにコピーボタンを配置
-- **レスポンシブデザイン**: デスクトップとモバイルの両方に対応
-- **プログレス追跡**: 現在のセクションをハイライト表示
+### コンテナ内でコマンド実行（用途別）
+```bash
+# 例: 依存を再インストール
+docker compose exec web npm install
 
-### セクション構成
+# Lint
+docker compose exec web npm run lint --silent || true
 
-1. **はじめに** - プロジェクト概要と技術スタック
-2. **前提条件** - 必要なソフトウェアと環境
-3. **プロジェクトセットアップ** - Nuxtプロジェクトの作成
-4. **各種設定** - 設定ファイルの構成
-5. **サンプルページ作成** - 基本的なページとコンポーネント
-6. **最終確認** - 動作確認とトラブルシューティング
+# ビルド
+docker compose exec web npm run build
+
+# 単体テスト（導入後の例）
+docker compose exec web npm test -- --watch
+
+# パッケージを追加/削除
+docker compose exec web npm i some-pkg
+docker compose exec web npm remove some-pkg
+```
+
+### よく使う操作（運用）
+- **再起動**: `docker compose restart web`
+- **ログを見る**: `docker compose logs -f web`
+- **別シェルに入る**: `docker compose exec web bash`
+
+### ポート設定（ホスト側の変更でOK）
+- コンテナ内は 3000（アプリ）/ 24678（Vite HMR）で動作。衝突時はホスト側の公開ポートだけ変えればOKです
+  ```yaml
+  # docker-compose.yml 抜粋
+  services:
+    web:
+      ports:
+        - "3001:3000"   # ホスト3001 → コンテナ3000（アプリ）
+        - "24679:24678" # ホスト24679 → コンテナ24678（HMR）
+  ```
+- 反映
+  - 起動中: `docker compose restart web`
+  - 停止中: `docker compose up`
+- コンテナ側ポート自体を変える必要がある場合のみ、`.env` の `NUXT_PORT` を変更してください（通常不要）
+
+### キャッシュとクリーン初期化（重要）
+- いつでも「真っさら」から確認できます（ローカル Node 環境に影響しません）
+- クリーン手順（すべて作り直し）
+  ```bash
+  docker compose down -v  # コンテナ停止/削除 + 名前付きボリューム削除（nuxt_node_modules 等）
+  docker compose build --no-cache web
+  docker compose up
+  ```
+- ビルドキャッシュをさらに削る（必要なときだけ）
+  ```bash
+  docker builder prune -f
+  docker image prune -f
+  ```
+
+### 「コンテナを消しても大丈夫？」への答え
+- はい。コードはホストの作業ディレクトリを「マウント」しているだけなので、コンテナ削除で消えません
+- `node_modules` は `nuxt_node_modules` という「名前付きボリューム」に保持されます
+  - コンテナだけ削除: node_modules は残る（次回起動が速い）
+  - `-v` 付きで削除: ボリュームも消える（完全クリーン）
 
 ## 📚 段階的セットアップ
 
@@ -202,32 +248,47 @@ my-flyonui-project/
 @source "./node_modules/flyonui/dist/index.js";
 ```
 
-## 🔧 トラブルシューティング
+## 🔧 トラブルシューティング（Docker前提）
 
 ### よくある問題と解決方法
 
-#### 依存関係の問題
-```bash
-# node_modulesとpackage-lock.jsonを削除して再インストール
-rm -rf node_modules package-lock.json
-npm install
-```
+#### 依存関係の問題（最も多い）
+- 推奨（完全クリーンで再構築）
+  ```bash
+  docker compose down -v
+  docker compose build --no-cache web
+  docker compose up
+  ```
+- 代替（最小限のやり直し：コンテナ内で再インストール）
+  ```bash
+  docker compose exec web sh -lc 'rm -rf node_modules package-lock.json && npm install'
+  ```
 
-#### ポート競合
-```bash
-# ポート3000を使用しているプロセスを終了
-npx kill-port 3000
-```
+#### ポート競合（3000が他プロセスで使用中）
+- まずコンテナを停止
+  ```bash
+  docker compose down
+  ```
+- それでも空かない場合（ホスト側の別プロセスが使用）
+  ```bash
+  # 任意（ホストで実行）
+  npx kill-port 3000
+  ```
 
-#### Tailwind/FlyonUIが効かない場合
-1. `assets/css/tailwind.css`の設定を確認
-2. `@plugin "flyonui"`が記載されているか確認
-3. `nuxt.config.ts`でCSS取り込み設定を確認
+#### Tailwind / FlyonUI が効かない場合
+1. `assets/css/tailwind.css` に以下があるか
+   - `@plugin "flyonui";`
+   - `@plugin "@iconify/tailwind4";`
+   - （JSコンポーネント利用時）`@import "flyonui/variants.css";` と `@source "./node_modules/flyonui/dist/index.js";`
+2. `nuxt.config.ts` に `css: ['~/assets/css/tailwind.css']` があるか
+3. 反映されない場合は再起動
+   ```bash
+   docker compose restart web
+   ```
 
-#### Windows固有の問題
-- PowerShellの実行ポリシー設定
-- パスの区切り文字（`\` vs `/`）
-- 文字エンコーディング（UTF-8推奨）
+#### Windows メモ（最低限）
+- PowerShell/コマンドプロンプト/WSL いずれでもOK。Docker Desktop が動いていれば同じコマンドで動作します
+- 改行は `.gitattributes` で `*.sh` を LF 固定済み（Windows でもそのまま使えます）
 
 ### 参考リンク
 - [FlyonUI公式ドキュメント](https://flyonui.com/docs/)
@@ -299,7 +360,7 @@ FlyonUIコンポーネントをベースに独自コンポーネントを作成�
 ---
 
 **作成者**: check5004  
-**最終更新**: 2025年9月12日
+**最終更新**: 2025年9月17日
 
 ---
 
