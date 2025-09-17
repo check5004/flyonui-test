@@ -7,6 +7,7 @@ export NUXI_INIT_ARGS="${NUXI_INIT_ARGS:-}"
 export NUXT_VERSION="${NUXT_VERSION:-3.17.4}"
 
 export PINIA_VERSION="${PINIA_VERSION:-^2}"
+export PINIA_NUXT_VERSION="${PINIA_NUXT_VERSION:-^0.5}"
 export NUXT_I18N_VERSION="${NUXT_I18N_VERSION:-^8}"
 export HEADLESSUI_VUE_VERSION="${HEADLESSUI_VUE_VERSION:-^1}"
 export HEROICONS_VUE_VERSION="${HEROICONS_VUE_VERSION:-^2}"
@@ -32,21 +33,21 @@ fi
 
 case "$NPM_CLIENT" in
   npm)
-    npm install ;;
+    npm install --ignore-scripts ;;
   pnpm)
     corepack enable || true
-    pnpm install ;;
+    pnpm install --ignore-scripts ;;
   yarn|yarnBerry|yarnModern)
     corepack enable || true
-    yarn install ;;
+    yarn install --ignore-scripts ;;
   *)
     echo "Unknown NPM_CLIENT=$NPM_CLIENT, falling back to npm";
-    npm install ;;
+    npm install --ignore-scripts ;;
 esac
 
 RUNTIME_DEPS=(
   "pinia@${PINIA_VERSION}"
-  "@pinia/nuxt@${PINIA_VERSION}"
+  "@pinia/nuxt@${PINIA_NUXT_VERSION}"
   "@nuxtjs/i18n@${NUXT_I18N_VERSION}"
   "@headlessui/vue@${HEADLESSUI_VUE_VERSION}"
   "@heroicons/vue@${HEROICONS_VUE_VERSION}"
@@ -67,30 +68,30 @@ install_deps() {
   case "$NPM_CLIENT" in
     npm)
       if [[ "$type" == "dev" ]]; then
-        npm i -D "${deps[@]}"
+        npm i -D --ignore-scripts "${deps[@]}"
       else
-        npm i "${deps[@]}"
+        npm i --ignore-scripts "${deps[@]}"
       fi
       ;;
     pnpm)
       if [[ "$type" == "dev" ]]; then
-        pnpm add -D "${deps[@]}"
+        pnpm add -D --ignore-scripts "${deps[@]}"
       else
-        pnpm add "${deps[@]}"
+        pnpm add --ignore-scripts "${deps[@]}"
       fi
       ;;
     yarn|yarnBerry|yarnModern)
       if [[ "$type" == "dev" ]]; then
-        yarn add -D "${deps[@]}"
+        yarn add -D --ignore-scripts "${deps[@]}"
       else
-        yarn add "${deps[@]}"
+        yarn add --ignore-scripts "${deps[@]}"
       fi
       ;;
     *)
       if [[ "$type" == "dev" ]]; then
-        npm i -D "${deps[@]}"
+        npm i -D --ignore-scripts "${deps[@]}"
       else
-        npm i "${deps[@]}"
+        npm i --ignore-scripts "${deps[@]}"
       fi
       ;;
   esac
@@ -98,6 +99,9 @@ install_deps() {
 
 install_deps "runtime" "${RUNTIME_DEPS[@]}"
 install_deps "dev" "${DEV_DEPS[@]}"
+
+echo "[bootstrap] Running nuxt prepare ..."
+CI=1 NUXT_TELEMETRY_DISABLED=1 FORCE_COLOR=0 npx --yes nuxt prepare
 
 echo "[bootstrap] Completed. You can now run dev server."
 

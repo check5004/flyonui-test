@@ -78,7 +78,8 @@ Windows環境でNuxt.js 3とUIフレームワーク「FlyonUI」を使用して�
 
 ```bash
 cp env/docker.env.example .env
-docker compose up --build
+docker compose up --build -d  # バックグラウンド起動
+docker compose logs -f web    # ログを見る（Ctrl+Cで離脱）
 ```
 
 ブラウザで `http://localhost:3000` を開きます。初回は自動で Nuxt 雛形生成・依存導入・Tailwind+FlyonUI 設定・サンプル配置を行います。
@@ -117,7 +118,9 @@ NUXT_MAJOR=4
 
 ### サーバー起動（ホットリロード）
 ```bash
-docker compose up
+docker compose up -d           # デタッチ起動
+docker compose ps              # 状態確認
+docker compose logs -f web     # ログを確認（Ctrl+Cで離脱）
 ```
 ブラウザで `http://localhost:3000` を開きます。コード編集はローカルで行い、ホットリロードが反映されます。
 
@@ -361,7 +364,3 @@ FlyonUIコンポーネントをベースに独自コンポーネントを作成�
 
 **作成者**: check5004  
 **最終更新**: 2025年9月17日
-
----
-
-> 💡 **ヒント**: 初回セットアップでは`index.html`の対話型ガイドから始めることをお勧めします。より詳細な制御が必要な場合は、段階的セットアップを使用してください。
