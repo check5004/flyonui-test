@@ -69,30 +69,50 @@ Windows環境でNuxt.js 3とUIフレームワーク「FlyonUI」を使用して�
 └── README.md                       # このファイル
 ```
 
-## 🚀 クイックスタート
+## 🚀 クイックスタート（Docker 自動化）
 
 ### 前提条件
 
-- **OS**: Windows 10/11
-- **Node.js**: LTS版 (v18.x, v20.x推奨)
-- **ターミナル**: PowerShell または コマンドプロンプト
+- **Docker Desktop**（Compose 含む）
 
-### インストール手順
+### 初回起動（Nuxt 3 デフォルト）
 
-1. **対話型ガイドの起動**
-   ```bash
-   # プロジェクトをクローン
-   git clone <repository-url>
-   cd <project-directory>
-   
-   # 対話型ガイドを開く
-   start index.html
-   ```
+```bash
+cp env/docker.env.example .env
+docker compose up --build
+```
 
-2. **ブラウザでの操作**
-   - `index.html`をブラウザで開く
-   - サイドバーのナビゲーションに従って手順を実行
-   - コードブロックの「Copy」ボタンでコマンドを簡単にコピー
+ブラウザで `http://localhost:3000` を開きます。初回は自動で Nuxt 雛形生成・依存導入・Tailwind+FlyonUI 設定・サンプル配置を行います。
+
+```mermaid
+flowchart TB
+  A[compose up] --> B[entrypoint.sh]
+  B --> C[bootstrap.sh]
+  C --> D{nuxt-app/ に package.json?}
+  D -- なし --> E[nuxi init .]
+  D -- あり --> F[skip]
+  E --> G[依存導入]
+  C --> G
+  G --> H[設定/サンプル配置]
+  H --> I[nuxt dev]
+```
+
+### Nuxt 4 へ切替（任意）
+
+`.env` を編集して再起動します。
+
+```
+NUXT_MAJOR=4
+# 必要に応じ NUXI_INIT_ARGS="--edge" など
+```
+
+必要に応じて `.env` で各ライブラリの範囲も調整可能です（`PINIA_VERSION`, `NUXT_I18N_VERSION`, `NUXT_TAILWINDCSS_VERSION` など）。
+
+### 構成メモ（Docker）
+- `docker/` 配下にDocker定義を集約しました。
+  - `docker/Dockerfile`
+  - `docker/scripts/entrypoint.sh`, `docker/scripts/bootstrap.sh`
+- `docker-compose.yml` はルートに配置し、`docker/Dockerfile` を参照します。
 
 ## 🖥 対話型セットアップガイド
 
