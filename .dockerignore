@@ -7,7 +7,6 @@ dist
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-docker/Dockerfile*
 docker-compose*
 env/*.env
 .env*

@@ -4,6 +4,7 @@ set -euo pipefail
 export NPM_CLIENT="${NPM_CLIENT:-npm}"
 export NUXT_MAJOR="${NUXT_MAJOR:-3}"
 export NUXI_INIT_ARGS="${NUXI_INIT_ARGS:-}"
+export NUXT_VERSION="${NUXT_VERSION:-3.17.4}"
 
 export PINIA_VERSION="${PINIA_VERSION:-^2}"
 export NUXT_I18N_VERSION="${NUXT_I18N_VERSION:-^8}"
@@ -19,10 +20,15 @@ cd "$WORKDIR"
 
 if [[ ! -f package.json ]]; then
   echo "[bootstrap] No package.json found. Initializing Nuxt (major=$NUXT_MAJOR) ..."
-  npx --yes nuxi@latest init . $NUXI_INIT_ARGS
+  CI=1 NUXT_TELEMETRY_DISABLED=1 FORCE_COLOR=0 npx --yes nuxi@latest init . --force --no-git $NUXI_INIT_ARGS
 fi
 
 echo "[bootstrap] Installing dependencies using $NPM_CLIENT ..."
+
+# Pin Nuxt version non-interactively if requested (default 3.17.4)
+if [[ -n "${NUXT_VERSION:-}" ]]; then
+  node -e "const fs=require('fs');const f='package.json';const p=JSON.parse(fs.readFileSync(f,'utf8'));p.devDependencies=p.devDependencies||{};p.devDependencies.nuxt='${NUXT_VERSION}';fs.writeFileSync(f,JSON.stringify(p,null,2)+'\n');"
+fi
 
 case "$NPM_CLIENT" in
   npm)

@@ -9,7 +9,8 @@ ENV PNPM_HOME="/pnpm" \
 
 WORKDIR /workspace
 
-COPY scripts/ /scripts/
+# Copy docker-local scripts
+COPY docker/scripts/ /scripts/
 RUN chmod +x /scripts/*.sh || true
 
 EXPOSE 3000 24678

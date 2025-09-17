@@ -13,6 +13,7 @@ services:
       - NUXT_TELEMETRY_DISABLED=1
       - CHOKIDAR_USEPOLLING=1
       - WATCHPACK_POLLING=true
+      - CI=1
     ports:
       - "3000:3000"
       - "24678:24678"
