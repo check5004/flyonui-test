@@ -8,11 +8,10 @@ export NUXT_VERSION="${NUXT_VERSION:-3.17.4}"
 
 export PINIA_VERSION="${PINIA_VERSION:-^2}"
 export PINIA_NUXT_VERSION="${PINIA_NUXT_VERSION:-^0.5}"
-export NUXT_I18N_VERSION="${NUXT_I18N_VERSION:-^8}"
 export HEADLESSUI_VUE_VERSION="${HEADLESSUI_VUE_VERSION:-^1}"
 export HEROICONS_VUE_VERSION="${HEROICONS_VUE_VERSION:-^2}"
 export FLYONUI_VERSION="${FLYONUI_VERSION:-latest}"
-export NUXT_TAILWINDCSS_VERSION="${NUXT_TAILWINDCSS_VERSION:-^6}"
+export NUXT_TAILWINDCSS_VERSION="${NUXT_TAILWINDCSS_VERSION:-^7}"
 export ICONIFY_TAILWIND4_VERSION="${ICONIFY_TAILWIND4_VERSION:-^1}"
 
 WORKDIR="/workspace/nuxt-app"
@@ -48,7 +47,6 @@ esac
 RUNTIME_DEPS=(
   "pinia@${PINIA_VERSION}"
   "@pinia/nuxt@${PINIA_NUXT_VERSION}"
-  "@nuxtjs/i18n@${NUXT_I18N_VERSION}"
   "@headlessui/vue@${HEADLESSUI_VUE_VERSION}"
   "@heroicons/vue@${HEROICONS_VUE_VERSION}"
   "flyonui@${FLYONUI_VERSION}"
@@ -112,34 +110,13 @@ if [[ ! -f nuxt.config.ts ]]; then
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@pinia/nuxt', '@nuxtjs/i18n', '@nuxtjs/tailwindcss'],
-  css: ['~/assets/css/tailwind.css'],
-  i18n: {
-    strategy: 'no_prefix',
-    locales: [
-      { code: 'ja', language: 'ja', name: '日本語' },
-      { code: 'en', language: 'en', name: 'English' }
-    ],
-    defaultLocale: 'ja',
-    vueI18n: '~/i18n.config.ts'
-  }
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  css: ['~/assets/css/tailwind.css']
 })
 EOF
 fi
 
-# Generate i18n.config.ts (externalized vueI18n messages)
-if [[ ! -f i18n.config.ts ]]; then
-  cat > i18n.config.ts << 'EOF'
-export default defineI18nConfig(() => ({
-  legacy: false,
-  locale: 'ja',
-  messages: {
-    ja: { title: 'サンプル', hello: 'こんにちは', save: '保存', saved: '保存しました', language: '言語', ja: '日本語', en: '英語' },
-    en: { title: 'Sample', hello: 'Hello', save: 'Save', saved: 'Saved', language: 'Language', ja: 'Japanese', en: 'English' }
-  }
-}))
-EOF
-fi
+## i18n is intentionally not used in this template
 
 if [[ ! -f tailwind.config.js ]]; then
   cat > tailwind.config.js << 'EOF'
@@ -191,10 +168,7 @@ if [[ ! -f layouts/default.vue ]]; then
   <div class="min-h-screen flex flex-col">
     <header class="navbar bg-base-100 shadow-sm">
       <div class="flex-1 px-4 font-semibold">FlyonUI Nuxt Template</div>
-      <div class="flex-none gap-2 px-4">
-        <button class="btn btn-ghost" @click="setLocale('ja')">{{ t('ja') }}</button>
-        <button class="btn btn-ghost" @click="setLocale('en')">{{ t('en') }}</button>
-      </div>
+      <div class="flex-none gap-2 px-4"></div>
     </header>
     <main class="flex-1 p-6">
       <slot />
@@ -210,8 +184,6 @@ if [[ ! -f layouts/default.vue ]]; then
 
 <script setup lang="ts">
 import Toast from '~/components/ui/Toast.vue'
-const { t, locale } = useI18n()
-const setLocale = (code: string) => { locale.value = code as any }
 </script>
 EOF
 fi
@@ -278,18 +250,17 @@ if [[ ! -f pages/index.vue ]]; then
   cat > pages/index.vue << 'EOF'
 <template>
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold">{{ t('title') }}</h1>
-    <p class="opacity-80">{{ t('hello') }}</p>
-    <AppButton variant="primary" @click="onSave">{{ t('save') }}</AppButton>
+    <h1 class="text-2xl font-bold">サンプル</h1>
+    <p class="opacity-80">こんにちは</p>
+    <AppButton variant="primary" @click="onSave">保存</AppButton>
   </div>
   </template>
 
 <script setup lang="ts">
 import AppButton from '~/components/ui/AppButton.vue'
 import { useToastStore } from '~/stores/toast'
-const { t } = useI18n()
 const toast = useToastStore()
-const onSave = () => toast.show(t('saved'))
+const onSave = () => toast.show('保存しました')
 </script>
 EOF
 fi
